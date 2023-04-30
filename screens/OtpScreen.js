@@ -1,22 +1,64 @@
-import { useRoute } from '@react-navigation/native';
-import React, {useState} from 'react';
+import {useNavigation, useRoute} from '@react-navigation/native';
+import React, {useEffect, useState} from 'react';
 import {
   StyleSheet,
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  Alert,
+  ToastAndroid,
 } from 'react-native';
+import auth from '@react-native-firebase/auth';
+import {ActivityIndicator, Button, MD2Colors} from 'react-native-paper';
+import {postData} from '../utils/Data';
+import {storeDataLocally} from '../utils/localStorage';
 
-const LoginPage = ({navigation}) => {
-  const route = useRoute()
+const OtpScreen = props => {
+  const route = useRoute();
+  const navigation = useNavigation();
   const [otp, setOtp] = useState('');
+  const [confirm, setConfirm] = useState(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const {name, phoneNo} = props?.route.params;
 
-  const handleLogin = () => {
-    //check otp
-    //if correct otp
-    const routes = navigation.getState()?.routes
-    navigation.replace(routes[routes.length - 2]?.name == "LoginPage" ? "BottomNavigator" : 'SelectProfile' , {user: route?.params.user});
+  async function confirmCode() {
+    try {
+      await confirm.confirm(otp);
+    } catch (error) {
+      console.log('Invalid code.');
+    }
+  }
+
+  useEffect(() => {
+    (async () => {
+      await signInWithPhoneNumber();
+    })();
+  }, []);
+
+  async function signInWithPhoneNumber() {
+    const confirmation = await auth().signInWithPhoneNumber(`+91${phoneNo}`);
+    setOtpSent(true);
+    setConfirm(confirmation);
+  }
+
+  const handleLogin = async () => {
+    await confirmCode();
+    if (confirm) {
+      const routes = navigation.getState()?.routes;
+      if (routes[routes.length - 2]?.name == 'LoginPage') {
+        const res = await postData('/user/login', {phoneNo});
+        await storeDataLocally('user', res);
+        navigation.replace('BottomNavigator', {user: res});
+      } else navigation.replace('SelectProfile', {user: {name, phoneNo}});
+
+      navigation.replace(
+        routes[routes.length - 2]?.name == 'LoginPage'
+          ? 'BottomNavigator'
+          : 'SelectProfile',
+        {user: res},
+      );
+    } else ToastAndroid.show('invalid Code', ToastAndroid.BOTTOM);
   };
 
   return (
@@ -34,7 +76,21 @@ const LoginPage = ({navigation}) => {
         maxLength={6}
       />
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonTitle}>Verify</Text>
+        <ActivityIndicator
+          size="small"
+          style={{display: !otpSent ? 'flex' : 'none'}}
+          color={MD2Colors.white}
+          animating={!otpSent}
+        />
+        <Text
+          style={{
+            fontSize: 16,
+            fontWeight: 'bold',
+            color: '#FFFFFF',
+            display: otpSent ? 'flex' : 'none',
+          }}>
+          Verify
+        </Text>
       </TouchableOpacity>
       <View style={styles.footer}>
         <Text style={styles.footerText}>Didn't receive the otp?</Text>
@@ -80,11 +136,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
+    flexDirection: 'row',
   },
   buttonTitle: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#FFFFFF',
+    // marginLeft: '10%'
   },
   footer: {
     marginTop: 30,
@@ -101,4 +159,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginPage;
+export default OtpScreen;

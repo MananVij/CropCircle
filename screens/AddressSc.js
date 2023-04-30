@@ -40,7 +40,7 @@ const SignUpPage = ({navigation}) => {
   };
   const handleSignUp = async () => {
     await fetch(
-      'https://eb01-2409-4051-2087-282f-c9e6-d313-f123-9585.in.ngrok.io/user/signup',
+      `${process.env.BASE_URL}/user/signup`,
       {
         method: 'POST',
         headers: {
@@ -55,18 +55,17 @@ const SignUpPage = ({navigation}) => {
     )
       .then(res => res.json())
       .then(async res => {
-        console.log(res, 'posted');
+        await storeDataLocally('user', res);
+        navigation.replace('BottomNavigator', {
+          user: {
+            ...route.params.user,
+            address: {addLine1, addLine2, city, pincode, state},
+          },
+        });
       })
       .catch(e => {
         // ToastAndroid.show('Some Error Occured', ToastAndroid.BOTTOM);
         console.log(e, 'error', e.code);
-      });
-      // await storeDataLocally('.user', res);
-      navigation.navigate('BottomNavigator', {
-        user: {
-          ...route.params.user,
-          address: {addLine1, addLine2, city, pincode, state},
-        },
       });
   };
 

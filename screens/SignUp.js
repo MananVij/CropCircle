@@ -19,7 +19,7 @@ const SignUpPage = ({navigation}) => {
     } else if (!phoneNo) {
       ToastAndroid.show('Please Enter Phone Number', ToastAndroid.BOTTOM);
     } else {
-      navigation.navigate('OtpScreen', {user: {name, phoneNo}});
+      navigation.navigate('OtpScreen',  {name, phoneNo});
     }
     // Write your sign-up logic here
   };

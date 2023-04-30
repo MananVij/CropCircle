@@ -8,20 +8,17 @@ import {
   TouchableOpacity,
   ToastAndroid,
 } from 'react-native';
+import {storeDataLocally} from '../utils/localStorage';
+import {useNavigation} from '@react-navigation/native';
+import auth from '@react-native-firebase/auth';
 
 const LoginPage = ({navigation}) => {
   const [phoneNo, setPhoneNo] = useState('');
 
-  const handleLogin = () => {
-    //send otp
-    if (!phoneNo) {
-      ToastAndroid.show('Please Enter Phone Number', ToastAndroid.BOTTOM);
-    } else navigation.navigate('OtpScreen', {user: {phoneNo}});
-  };
-
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Farmers Community</Text>
+      <Text style={styles.title}>CropCircle</Text>
+      {/* <Text style={styles.title}>Welcome to Farmers Community</Text> */}
       <TextInput
         style={styles.input}
         placeholder="Phone Number"
@@ -32,7 +29,12 @@ const LoginPage = ({navigation}) => {
         autoCapitalize="none"
         autoCorrect={false}
       />
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={async () => {
+          navigation.navigate('OtpScreen', {phoneNo});
+        }}>
+        {/* <TouchableOpacity style={styles.button} onPress={handleLogin}> */}
         <Text style={styles.buttonTitle}>Log in</Text>
       </TouchableOpacity>
       <View style={styles.footer}>

@@ -1,3 +1,4 @@
+import {useNavigation} from '@react-navigation/native';
 import React, {useState} from 'react';
 import {
   StyleSheet,
@@ -5,14 +6,27 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  ToastAndroid,
 } from 'react-native';
+import {postCrop, postData} from '../utils/Data';
 
-const CropSellReq = ({navigation}) => {
-  const [Cropname, setCropName] = useState('');
+const CropSellReq = props => {
+  const navigation = useNavigation();
+  const [cropName, setCropName] = useState('');
   const [weight, setWeight] = useState('');
+  const [price, setPrice] = useState('');
+  const {user} = props?.route.params;
 
-  const handleSubmission = () => {
-    navigation.navigate('CropStock');
+  const handleSubmission = async () => {
+    const res = await postCrop('/crop/createcrop', user[0]?.token, {
+      cropName,
+      weight,
+      price,
+      uid: user[0]?.user._id,
+    });
+    if (res?.message == 'Successfully Created a crop')
+      navigation.navigate('CropStock', {user});
+    else ToastAndroid.show('Some Error Occured', ToastAndroid.BOTTOM);
     // Write your sign-up logic here
   };
 
@@ -24,13 +38,13 @@ const CropSellReq = ({navigation}) => {
         placeholder="Crop Name"
         placeholderTextColor="#AAAAAA"
         onChangeText={text => setCropName(text)}
-        value={Cropname}
+        value={cropName}
         autoCapitalize="words"
         autoCorrect={false}
       />
       <TextInput
         style={styles.input}
-        placeholder="Weight of the Crop (QT)"
+        placeholder="Weight (QT)"
         placeholderTextColor="#AAAAAA"
         onChangeText={text => setWeight(text)}
         value={weight}
@@ -38,7 +52,21 @@ const CropSellReq = ({navigation}) => {
         autoCapitalize="none"
         autoCorrect={false}
       />
-      <TouchableOpacity style={styles.button} onPress={handleSubmission}>
+      <TextInput
+        style={styles.input}
+        placeholder="Price (QT)"
+        placeholderTextColor="#AAAAAA"
+        onChangeText={text => setPrice(text)}
+        value={price}
+        keyboardType="numeric"
+        autoCapitalize="none"
+        autoCorrect={false}
+      />
+      <TouchableOpacity
+        style={styles.button}
+        onPress={async () => {
+          await handleSubmission();
+        }}>
         <Text style={styles.buttonTitle}>Submit</Text>
       </TouchableOpacity>
     </View>

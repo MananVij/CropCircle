@@ -1,4 +1,4 @@
-import * as React from 'react';
+import React, {useState, useEffect, useContext} from 'react';
 import {
   Appbar,
   Card,
@@ -7,74 +7,102 @@ import {
   Paragraph,
   Button,
   Provider,
+  Text,
 } from 'react-native-paper';
-import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
 import MarketComponent from '../Component/CustomItem';
-import {View, Text, StyleSheet, ScrollView} from 'react-native';
+import {View, StyleSheet, ScrollView} from 'react-native';
 import Theme from '../assests/Theme/theme';
-import { useNavigation } from '@react-navigation/native';
-const CheckoutScreen = () => {
-  const navigation = useNavigation()
+import {useNavigation} from '@react-navigation/native';
+import CheckoutItemCard from '../Component/CheckoutItemCard';
+import {OrderContext} from '../src/context/Order';
+import theme from '../assests/Theme/theme';
+import {postCrop, postData} from '../utils/Data';
+import colors from '../assests/Theme/colors';
+const CheckoutScreen = props => {
+  const {order, setOrder} = useContext(OrderContext);
+  const navigation = useNavigation();
   const _goBack = () => console.log('Went back');
   const _checkOut = () => {
-    navigation.navigate("PaymentsScreen")
+    navigation.navigate('PaymentsScreen');
   };
+
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalValue, setTotalValue] = useState(0);
+  const {user} = props;
+  useEffect(() => {
+    let totalIt = 0;
+    let totalVal = 0;
+    order?.map(el => {
+      totalIt = totalIt + el.qty;
+      totalVal = totalVal + el.qty * el.price;
+    });
+    setTotalItems(totalIt);
+    setTotalValue(totalVal);
+  }, [order]);
+
+  const handleCheckout = async () => {
+    navigation.navigate('PaymentScreen', {user, order, totalValue});
+    // let responses = [];
+    // order.map(async el => {
+    //   const res = await postCrop('/transaction/createTransaction', user[0]?.token, {
+    //     quantity: el?.qty,
+    //     amount: el?.qty * el?.price,
+    //     crop_id: el?._id,
+    //     buyer_id: user[0]?.user._id,
+    //     seller_id: el?.uid._id,
+    //   });
+    //   responses.push("res", res);
+    // });
+    setOrder([]);
+  };
+
   return (
-    <SafeAreaProvider style={styles.container}>
-      <Appbar.Header>
-        <Appbar.BackAction onPress={_goBack} />
-        <Appbar.Content title="Cart" />
-        {/* <Appbar.Action icon="magnify" onPress={_handleSearch} />
-      <Appbar.Action icon="dots-vertical" onPress={_handleMore} /> */}
-      </Appbar.Header>
-      <View>
-        <ScrollView backgroundColor='#EFFFF8'>
-          <MarketComponent></MarketComponent>
-          <MarketComponent></MarketComponent>
-          <MarketComponent></MarketComponent>
-          <MarketComponent></MarketComponent>
-          <MarketComponent></MarketComponent>
-        </ScrollView>
-        {/* <Provider theme={Theme}> */}
-        <View style={styles.cardStyle}>
-          <Provider theme={Theme}>
-            <Card backgroundColor="white">
-              {/* <Card.Title title="Card Title" subtitle="Card Subtitle" left={LeftContent} /> */}
-              <Card.Content backgroundColor='#EFFFF8'>
-                <View style={styles.rowStyle}>
-                  <View>
-                    <Title>Total Items:</Title>
-                    <Paragraph>2</Paragraph>
-                  </View>
-                  <View>
-                    <Title>Total Amount:</Title>
-                    <Paragraph>₹500</Paragraph>
-                  </View>
-                </View>
-              </Card.Content>
-              {/* <Card.Cover source={{ uri: 'https://picsum.photos/700' }} /> */}
-              <Card.Actions backgroundColor="#EFFFF8">
-                <Button onPress={_checkOut}>
-                  Proceed to Checkout
-                </Button>
-              </Card.Actions>
-            </Card>
-          </Provider>
+    <View style={styles.container}>
+      <ScrollView>
+        {/* <ScrollView style={styles.container}> */}
+        {order?.map((el, idx) => {
+          return (
+            <View key={idx}>
+              <CheckoutItemCard
+                order={order}
+                setOrder={setOrder}
+                item={el}></CheckoutItemCard>
+            </View>
+          );
+        })}
+      </ScrollView>
+      <View style={styles.totalContainer}>
+        <View>
+          <View style={{flexDirection: 'row', alignItems: 'baseline'}}>
+            <Text style={styles.textTotal}>Total Items: </Text>
+            <Text style={styles.text}>{totalItems}</Text>
+          </View>
+          <View style={{flexDirection: 'row', alignItems: 'baseline'}}>
+            <Text style={styles.textTotal}>Total: </Text>
+            <Text style={styles.text}>{totalValue}</Text>
+          </View>
         </View>
-        {/* </Provider> */}
+        <Button
+          style={{justifyContent: 'center'}}
+          theme={theme}
+          mode="contained"
+          onPress={async () => {
+            await handleCheckout();
+          }}>
+          Proceed to Checkout
+        </Button>
       </View>
-    </SafeAreaProvider>
+    </View>
+    // </ScrollView>
   );
 };
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
+    backgroundColor: colors.bgColor,
   },
-  rowStyle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-  },
+
   cardStyle: {
     backgroundColor: 'white',
     bottom: 0,
@@ -85,6 +113,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     marginBottom: 110,
+  },
+  text: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  textTotal: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    paddingVertical: '3%',
+    marginHorizontal: '5%',
+    borderRadius: 20,
+    backgroundColor: '#EFFFF8',
+    marginBottom: '2%',
+    marginVertical: '1%',
+    elevation: 5,
   },
 });
 export default CheckoutScreen;

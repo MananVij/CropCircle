@@ -1,5 +1,5 @@
-import * as React from 'react';
-import {BottomNavigation, Text,Provider} from 'react-native-paper';
+import React, {useState, useEffect, useContext} from 'react';
+import {BottomNavigation, Text, Provider} from 'react-native-paper';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {View, Image, StyleSheet} from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
@@ -7,14 +7,22 @@ import CustomItem from './CustomItem';
 import MarketScreen from '../screens/MarketScreen';
 import UserProfile from '../screens/UserPage';
 import CheckoutScreen from '../screens/CheckoutScreen';
-const marketPlaceRoute = () => <MarketScreen></MarketScreen>;
-const communityRoute = () => <HomeScreen></HomeScreen>;
-const userprofile = () => <UserProfile></UserProfile>;
-const checkoutPage = () => <CheckoutScreen></CheckoutScreen>
 import Theme from '../assests/Theme/theme';
-export default function BottomNavigator() {
-  const [index, setIndex] = React.useState(0);
-  const [routes] = React.useState([
+import {useRoute} from '@react-navigation/native';
+import {OrderContext} from '../src/context/Order';
+import colors from '../assests/Theme/colors';
+
+export default function BottomNavigator(props) {
+  const [crops, setCrops] = useState([]);
+  const {user} = props
+
+  const shopRoute = () => <MarketScreen crops={crops} setCrops={setCrops} user={user} ></MarketScreen>;
+  const communityRoute = () => <HomeScreen user={user}></HomeScreen>;
+  const userprofile = () => <UserProfile user={user}></UserProfile>;
+  const checkoutPage = () => <CheckoutScreen user={user}></CheckoutScreen>;
+
+  const [index, setIndex] = useState(0);
+  const [routes] = useState([
     {
       key: 'community',
       title: 'Community',
@@ -22,8 +30,8 @@ export default function BottomNavigator() {
       unfocusedIcon: 'account-group-outline',
     },
     {
-      key: 'marketPlace',
-      title: 'MarketPlace',
+      key: 'shop',
+      title: 'Shop',
       focusedIcon: 'shopping',
       unfocusedIcon: 'shopping-outline',
     },
@@ -42,20 +50,27 @@ export default function BottomNavigator() {
   ]);
 
   const renderScene = BottomNavigation.SceneMap({
-    marketPlace: marketPlaceRoute,
+    shop: shopRoute,
     community: communityRoute,
     UserPage: userprofile,
-    checkoutPage: checkoutPage
+    checkoutPage: checkoutPage,
   });
 
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider style={{backgroundColor: colors.bgColor}}>
       <BottomNavigation
         theme={{colors: {secondaryContainer: '#0dbd71'}}}
         barStyle={{
           height: '10%',
           backgroundColor: '#EFFFF8',
+          marginHorizontal: '2%',
+          marginBottom: '3%',
+          borderRadius: 40,
+          paddingHorizontal: '5%',
+          paddingBottom: '5%',
+          overflow: 'hidden'
         }}
+        style={{backgroundColor: 'transparent'}}
         navigationState={{index, routes}}
         onIndexChange={setIndex}
         renderScene={renderScene}
